@@ -18,7 +18,6 @@ public class Script_Manager : MonoBehaviour
 
     void Update()
     {
-        // Only update the string if we are in Play mode to save resources
         if (!Application.isPlaying) return;
 
         UpdateTelemetryDashboard();
