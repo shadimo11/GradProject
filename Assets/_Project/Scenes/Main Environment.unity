@@ -1615,7 +1615,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GPS
   updateRateHz: 5
-  posNoiseMeters: 2.5
+  posNoiseMeters: 0
   hasFix: 1
   satellites: 8
   positionX: 0
@@ -2825,7 +2825,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Barometer
   seaLevelPressure_hPa: 1013.25
   seaLevelTemperature_C: 15
-  pressureNoiseStd_hPa: 0.5
+  pressureNoiseStd_hPa: 0
   pressureBias_hPa: 0
   altitudeFrom: {fileID: 0}
   worldUpAxis: {x: 0, y: 1, z: 0}
