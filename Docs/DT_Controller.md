@@ -1,3 +1,5 @@
+# Simulink Controller Architecture & Details
+
 # Input Variables (Unity -> Simulink):
 1. Theta
 2. Phi
