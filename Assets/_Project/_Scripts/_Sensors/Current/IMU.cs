@@ -28,7 +28,8 @@ public class IMU : MonoBehaviour
     public bool logToConsole = true;
     public float logEverySeconds = 0.5f;
 
-    private Rigidbody rb;
+    [Tooltip("Drag the parent Drone root object here")]
+    public Rigidbody rb;
     private Vector3 velPrevWorld;
     private float imuTimer;
     private float imuDt;
@@ -39,7 +40,6 @@ public class IMU : MonoBehaviour
 
     void Awake()
     {
-        rb = GetComponent<Rigidbody>();
         imuDt = 1f / Mathf.Max(1f, sampleRateHz);
 
         // Simulated hardware latency (15ms)
