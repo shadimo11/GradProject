@@ -1649,7 +1649,7 @@ Transform:
   m_GameObject: {fileID: 1401661448}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 5, z: 0}
+  m_LocalPosition: {x: 0, y: 6, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -6164,13 +6164,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1820782767368701945}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: -0.8778576, z: 0, w: 0.47892174}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0.31399584, y: 0.33618814, z: -2.3579862}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 42550308}
-  m_LocalEulerAnglesHint: {x: 0, y: -122.77, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &225010338237162513
 Transform:
   m_ObjectHideFlags: 0
@@ -99860,9 +99860,9 @@ MonoBehaviour:
   sampleRateHz: 100
   gravityMagnitude: 9.80665
   calibSys: 3
-  rpNoiseDeg: 0.2
-  yawNoiseDeg: 0.5
-  linAccNoise: 0.02
+  rpNoiseDeg: 0
+  yawNoiseDeg: 0
+  linAccNoise: 0
   eulerDeg: {x: 0, y: 0, z: 0}
   linearAccel_mps2: {x: 0, y: 0, z: 0}
   logToConsole: 1
