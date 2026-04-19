@@ -145,7 +145,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 42550300}
   serializedVersion: 5
-  m_Mass: 1.75
+  m_Mass: 1.74
   m_LinearDamping: 0.15
   m_AngularDamping: 0.3
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -172,7 +172,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 42550300}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -99836,7 +99836,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4805313672295669120}
-  - component: {fileID: 7216901869423077180}
   - component: {fileID: 7216901869423077179}
   m_Layer: 0
   m_Name: BNO055 IMU
@@ -99867,33 +99866,7 @@ MonoBehaviour:
   linearAccel_mps2: {x: 0, y: 0, z: 0}
   logToConsole: 1
   logEverySeconds: 0.5
---- !u!54 &7216901869423077180
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7216901869423077178}
-  serializedVersion: 5
-  m_Mass: 1
-  m_LinearDamping: 0
-  m_AngularDamping: 0.05
-  m_CenterOfMass: {x: 0, y: 0, z: 0}
-  m_InertiaTensor: {x: 1, y: 1, z: 1}
-  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ImplicitCom: 1
-  m_ImplicitTensor: 1
-  m_UseGravity: 1
-  m_IsKinematic: 0
-  m_Interpolate: 0
-  m_Constraints: 0
-  m_CollisionDetection: 0
+  rb: {fileID: 42550307}
 --- !u!4 &7217592998652248205
 Transform:
   m_ObjectHideFlags: 0

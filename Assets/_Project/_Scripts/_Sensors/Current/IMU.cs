@@ -5,7 +5,6 @@ using UnityEngine;
 /// Configured for: X=Forward, Y=Left, Z=Up (Right-Handed System)
 /// </summary>
 [DisallowMultipleComponent]
-[RequireComponent(typeof(Rigidbody))]
 public class IMU : MonoBehaviour
 {
     [Header("Sampling")]
