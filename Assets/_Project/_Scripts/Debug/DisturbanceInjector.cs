@@ -1,9 +1,11 @@
 using UnityEngine;
+using UnityEngine.InputSystem; // Required for the new Input System
 
 [RequireComponent(typeof(Rigidbody))]
 public class DisturbanceInjector : MonoBehaviour
 {
-    public float disturbanceTorque = 0.12f;
+    // Updated to the exact torque value we calculated previously
+    public float disturbanceTorque = 0.03f;
     private Rigidbody rb;
 
     void Start()
@@ -13,18 +15,19 @@ public class DisturbanceInjector : MonoBehaviour
 
     void Update()
     {
-        // Inject Pitch Disturbance
-        if (Input.GetKeyDown(KeyCode.P))
+        // Safety check to ensure a keyboard is connected
+        if (Keyboard.current == null) return;
+
+        // Inject Pitch Disturbance (P key)
+        if (Keyboard.current.pKey.wasPressedThisFrame)
         {
-            // Applies torque around the local X-axis (Pitch)
             rb.AddRelativeTorque(Vector3.right * disturbanceTorque, ForceMode.Impulse);
             Debug.Log("Pitch Disturbance Applied");
         }
 
-        // Inject Roll Disturbance
-        if (Input.GetKeyDown(KeyCode.R))
+        // Inject Roll Disturbance (R key)
+        if (Keyboard.current.rKey.wasPressedThisFrame)
         {
-            // Applies torque around the local Z-axis (Roll)
             rb.AddRelativeTorque(Vector3.forward * disturbanceTorque, ForceMode.Impulse);
             Debug.Log("Roll Disturbance Applied");
         }
