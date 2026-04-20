@@ -130,6 +130,7 @@ GameObject:
   - component: {fileID: 42550308}
   - component: {fileID: 42550307}
   - component: {fileID: 42550310}
+  - component: {fileID: 42550311}
   m_Layer: 0
   m_Name: Drone_H7
   m_TagString: Untagged
@@ -270,6 +271,19 @@ MonoBehaviour:
   - {fileID: 224851469009091928}
   motorPwm: []
   targetTransform: {fileID: 1401661449}
+--- !u!114 &42550311
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 42550300}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f17815098c26824097587585afb1116, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DisturbanceInjector
+  disturbanceTorque: 0.12
 --- !u!1 &172392082
 GameObject:
   m_ObjectHideFlags: 0
