@@ -4,13 +4,15 @@ using UnityEngine.InputSystem; // Required for the new Input System
 [RequireComponent(typeof(Rigidbody))]
 public class DisturbanceInjector : MonoBehaviour
 {
-    // Updated to the exact torque value we calculated previously
-    public float disturbanceTorque = 0.03f;
+    public float disturbanceAngularVelocity = 5f; // Degrees per second
+    private float inertia = 0.04547f;
+    private float disturbanceTorque;
     private Rigidbody rb;
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
+        disturbanceTorque = inertia * disturbanceAngularVelocity * Mathf.Deg2Rad; // Convert to radians per second
     }
 
     void Update()

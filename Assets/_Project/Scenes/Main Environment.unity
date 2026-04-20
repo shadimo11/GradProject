@@ -283,7 +283,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f17815098c26824097587585afb1116, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DisturbanceInjector
-  disturbanceTorque: 0.12
+  disturbanceTorque: 0.012
 --- !u!1 &172392082
 GameObject:
   m_ObjectHideFlags: 0
