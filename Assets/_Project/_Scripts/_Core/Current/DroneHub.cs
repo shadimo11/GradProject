@@ -1,4 +1,5 @@
 using System;
+using UnityEditorInternal;
 using UnityEngine;
 
 [DisallowMultipleComponent]
@@ -54,6 +55,11 @@ public class DroneHub : MonoBehaviour
             foreach (var t in motorTransforms) avgPos += t.localPosition;
             rb.centerOfMass = avgPos / motorTransforms.Length;
         }
+
+        float i_xy = 0.04547f; // kg.m^2
+        float i_z = 2.0f * i_xy;
+        rb.inertiaTensor = new Vector3(i_xy, i_xy, i_z);
+        rb.inertiaTensorRotation = Quaternion.identity;
     }
 
     void FixedUpdate()
