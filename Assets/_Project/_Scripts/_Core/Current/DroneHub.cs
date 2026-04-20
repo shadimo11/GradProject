@@ -1,6 +1,7 @@
 using System;
 using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Rigidbody))]
@@ -137,11 +138,22 @@ public class DroneHub : MonoBehaviour
         {
             baro_alt = 0;
         }
-        // --- LIDAR AGGREGATION ---
+        // --- LIDAR AGGREGATION ---    Skipped in early debugging and testing phase
+        /*
         if (lidar != null)
         {
             lidar_alt = lidar.lidar_alt;
         }
+        */
+
+        // --- Disturbance Debugging ---
+        float pulseSignal = 0f;
+        if (Keyboard.current != null && Keyboard.current.pKey.isPressed)
+        {
+            pulseSignal = 1f;       // Outputs 1 to Simulink when 'P' is held
+        }
+
+        lidar_alt = pulseSignal;    // Hijack Lidar signal with pulse signal
 
         // --- FILL PACKET (Order MUST match Simulink Unpack) ---
         feedbackFloats[0] = theta;
