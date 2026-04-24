@@ -30,6 +30,13 @@ public class DroneHub : MonoBehaviour
     private float thrustB = 1.5276f;
     private float thrustC = 5.0422f;
 
+    [Header("Manual Physics Overrides")]
+    [Tooltip("Overrides the Rigidbody Center of Mass")]
+    public Vector3 customCenterOfMass = new Vector3(-0.1532f, 0.2441882f, -2.5194f);
+
+    [Tooltip("Overrides the Rigidbody Inertia Tensor (Ixx, Iyy, Izz)")]
+    public Vector3 customInertiaTensor = new Vector3(0.04547f, 0.04547f, 0.09094f);
+
     [Header("Setpoints (Virtual Pilot)")]
     public Transform targetTransform;
     private Vector3 positionSetpoint;
@@ -49,17 +56,9 @@ public class DroneHub : MonoBehaviour
         if (motorTransforms != null)
             motorPwm = new float[motorTransforms.Length];
 
-        // Auto-balance Center of Mass
-        if (motorTransforms != null && motorTransforms.Length > 0)
-        {
-            Vector3 avgPos = Vector3.zero;
-            foreach (var t in motorTransforms) avgPos += t.localPosition;
-            rb.centerOfMass = avgPos / motorTransforms.Length;
-        }
-
-        float i_xy = 0.04547f; // kg.m^2
-        float i_z = 2.0f * i_xy;
-        rb.inertiaTensor = new Vector3(i_xy, i_xy, i_z);
+        // Manual Center of Mass & Inertia
+        rb.centerOfMass = customCenterOfMass;
+        rb.inertiaTensor = customInertiaTensor;
         rb.inertiaTensorRotation = Quaternion.identity;
     }
 
@@ -148,10 +147,10 @@ public class DroneHub : MonoBehaviour
 
         // --- Disturbance Debugging ---
         float pulseSignal = 0f;
-        if (Keyboard.current != null && Keyboard.current.pKey.isPressed)
+        if (Keyboard.current != null && (Keyboard.current.pKey.isPressed || Keyboard.current.rKey.isPressed))
         {
-            pulseSignal = 1f;       // Outputs 1 to Simulink when 'P' is held
-        }
+            pulseSignal = 1f;       // Outputs 1 to Simulink when 'P' or 'R' is held
+        }   
 
         lidar_alt = pulseSignal;    // Hijack Lidar signal with pulse signal
 

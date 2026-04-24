@@ -270,6 +270,8 @@ MonoBehaviour:
   - {fileID: 8484047515731618561}
   - {fileID: 224851469009091928}
   motorPwm: []
+  customCenterOfMass: {x: -0.1532, y: -0.05, z: -2.5194}
+  customInertiaTensor: {x: 0.04547, y: 0.04547, z: 0.09094}
   targetTransform: {fileID: 1401661449}
 --- !u!114 &42550311
 MonoBehaviour:
