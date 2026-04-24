@@ -129,8 +129,8 @@ GameObject:
   m_Component:
   - component: {fileID: 42550308}
   - component: {fileID: 42550307}
-  - component: {fileID: 42550310}
   - component: {fileID: 42550311}
+  - component: {fileID: 42550312}
   m_Layer: 0
   m_Name: Drone_H7
   m_TagString: Untagged
@@ -246,7 +246,20 @@ Transform:
   - {fileID: 7022650861700860411}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &42550310
+--- !u!114 &42550311
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 42550300}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f17815098c26824097587585afb1116, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DisturbanceInjector
+  disturbanceAngularVelocity: 5
+--- !u!114 &42550312
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -270,22 +283,9 @@ MonoBehaviour:
   - {fileID: 8484047515731618561}
   - {fileID: 224851469009091928}
   motorPwm: []
-  customCenterOfMass: {x: -0.1532, y: -0.05, z: -2.5194}
+  customCenterOfMass: {x: -0.15320511, y: 0.2461882, z: -2.5194175}
   customInertiaTensor: {x: 0.04547, y: 0.04547, z: 0.09094}
   targetTransform: {fileID: 1401661449}
---- !u!114 &42550311
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 42550300}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9f17815098c26824097587585afb1116, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DisturbanceInjector
-  disturbanceAngularVelocity: 5
 --- !u!1 &172392082
 GameObject:
   m_ObjectHideFlags: 0

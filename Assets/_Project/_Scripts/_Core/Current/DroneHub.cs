@@ -32,7 +32,7 @@ public class DroneHub : MonoBehaviour
 
     [Header("Manual Physics Overrides")]
     [Tooltip("Overrides the Rigidbody Center of Mass")]
-    public Vector3 customCenterOfMass = new Vector3(-0.1532f, 0.2441882f, -2.5194f);
+    public Vector3 customCenterOfMass = new Vector3(-0.1532051f, 0.2461882f, -2.519418f);
 
     [Tooltip("Overrides the Rigidbody Inertia Tensor (Ixx, Iyy, Izz)")]
     public Vector3 customInertiaTensor = new Vector3(0.04547f, 0.04547f, 0.09094f);
