@@ -232,7 +232,8 @@ function Control_Signal = fcn(Kp,Ki,Kd,Ts, CONT_EN, error)
     else
         I=0;
     end
-    Control_Signal=(Kp*error+Ki*I+Kd*(error-error_1)/Ts)*CONT_EN;
+    Control_Signal=((Kp*error+Ki*I+Kd*(error-error_1)/Ts) + 0.404)*CONT_EN;
+    % Add a constant hover thrust percentage of 40.4%
     error_1 = error;
 end
 ```
