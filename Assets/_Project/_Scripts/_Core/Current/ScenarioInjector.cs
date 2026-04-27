@@ -141,6 +141,17 @@ public class ScenarioInjector : MonoBehaviour
             droneRb.mass = _nominalMass + addedMassKg;
             droneRb.centerOfMass = _nominalCoM + comShiftMeters;
         }
+        if (droneHub != null)
+        {
+            droneHub.voltageScalar = voltageScalar;
+            droneHub.motorEfficiencyScalars = new float[]
+            {
+                motor1EfficiencyScalar,
+                motor2EfficiencyScalar,
+                motor3EfficiencyScalar,
+                motor4EfficiencyScalar
+            };
+        }
     }
 
     void RestoreNominal()
@@ -153,6 +164,11 @@ public class ScenarioInjector : MonoBehaviour
         {
             droneRb.mass = _nominalMass;
             droneRb.centerOfMass = _nominalCoM;
+        }
+        if (droneHub != null)
+        {
+            droneHub.voltageScalar = 1f;
+            droneHub.motorEfficiencyScalars = new float[] { 1f, 1f, 1f, 1f };
         }
     }
 }
