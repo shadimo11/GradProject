@@ -17,6 +17,10 @@ public class DroneHub : MonoBehaviour
     public Lidar lidar;
     public GPS gps;
 
+    [Header("Scenario Overrides (set by ScenarioInjector)")]
+    [Range(0f, 1f)] public float voltageScalar = 1f;
+    public float[] motorEfficiencyScalars = new float[] { 1f, 1f, 1f, 1f };
+
     [Header("Motors")]
     [Tooltip("Assign motor transforms in the order: RR - RL - FR - FL")]
     public Transform[] motorTransforms;
@@ -186,6 +190,7 @@ public class DroneHub : MonoBehaviour
         }
     }
 
+    // Modified ApplyPhysics() method
     void ApplyPhysics()
     {
         if (motorTransforms == null) return;
@@ -193,11 +198,14 @@ public class DroneHub : MonoBehaviour
         for (int i = 0; i < motorTransforms.Length; i++)
         {
             float pwm = motorPwm[i];
-            // Polynomial Thrust Curve: F = A*x^2 + B*x + C
             float thrustGrams = (thrustA * pwm * pwm) + (thrustB * pwm) + thrustC;
             float thrustNewtons = (thrustGrams / 1000f) * 9.81f;
 
-            if (pwm < 10f) thrustNewtons = 0f; // Deadzone
+            // Apply voltage degradation and per-motor efficiency
+            thrustNewtons *= voltageScalar;
+            thrustNewtons *= motorEfficiencyScalars[i];
+
+            if (pwm < 10f) thrustNewtons = 0f;
 
             Vector3 force = motorTransforms[i].up * thrustNewtons;
             rb.AddForceAtPosition(force, motorTransforms[i].position);
