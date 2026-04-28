@@ -277,6 +277,12 @@ MonoBehaviour:
   barometer: {fileID: 1637023849}
   lidar: {fileID: 3104900056482717126}
   gps: {fileID: 1374443821}
+  voltageScalar: 1
+  motorEfficiencyScalars:
+  - 1
+  - 1
+  - 1
+  - 1
   motorTransforms:
   - {fileID: 5805468912441099133}
   - {fileID: 8390305386091351635}
