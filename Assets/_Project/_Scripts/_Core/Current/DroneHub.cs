@@ -7,6 +7,11 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(Rigidbody))]
 public class DroneHub : MonoBehaviour
 {
+    public enum InputMode { Controller, LogReplay }
+    [Header("Operation Mode")]
+    [Tooltip("Choose whether PWM comes from Simulink or a CSV log replay")]
+    public InputMode operationMode = InputMode.Controller;
+
     [Header("Dependencies")]
     public TCPServer server;
     public Rigidbody rb;
@@ -76,7 +81,8 @@ public class DroneHub : MonoBehaviour
         }
 
         // TCP: Get incoming Motor PWM from Simulink
-        if (server != null && server.TryGetPwm(out float[] newPwm))
+        // Only apply TCP commands if we are in Controller mode.
+        if (operationMode == InputMode.Controller && server != null && server.TryGetPwm(out float[] newPwm))
         {
             ApplyMotorCommands(newPwm);
         }
@@ -89,6 +95,14 @@ public class DroneHub : MonoBehaviour
         {
             PackSensorData();
             server.SendFeedback(sendBuffer);
+        }
+    }
+
+    public void InjectLogPWM(float[] loggedPWM)
+    {
+        if (operationMode == InputMode.LogReplay)
+        {
+            ApplyMotorCommands(loggedPWM);
         }
     }
 

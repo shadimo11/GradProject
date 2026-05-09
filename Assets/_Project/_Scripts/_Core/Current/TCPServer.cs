@@ -10,21 +10,15 @@ public class TCPServer : MonoBehaviour
 {
     [Header("Configuration")]
     public int pwmPort = 9000;      // In: 4 floats (16 bytes)
-    public int feedbackPort = 9001; // Out: 11 floats (44 bytes)
+    public int feedbackPort = 9001; // Out: 12 floats (48 bytes)
     public bool autoStart = true;
     public bool debugLog = false;
 
-    // Threading & Networking Objects
+    // Threading & Data
     private Thread pwmThread;
     private Thread feedbackThread;
     private volatile bool running = false;
 
-    private TcpListener pwmListener;
-    private TcpListener feedbackListener;
-    private TcpClient activePwmClient;
-    private TcpClient activeFeedbackClient;
-
-    // Data Locks
     private float[] latestPwm = new float[4];
     private bool hasNewPwm = false;
     private readonly object pwmLock = new object();
@@ -35,11 +29,6 @@ public class TCPServer : MonoBehaviour
     void Start()
     {
         if (autoStart) StartServer();
-    }
-
-    void OnApplicationQuit()
-    {
-        StopServer();
     }
 
     void OnDestroy()
@@ -88,37 +77,28 @@ public class TCPServer : MonoBehaviour
 
     public void StopServer()
     {
-        if (!running) return;
         running = false;
-
-        // Forcefully close listeners and clients to break blocking Read/Write calls
-        pwmListener?.Stop();
-        feedbackListener?.Stop();
-        activePwmClient?.Close();
-        activeFeedbackClient?.Close();
-
-        if (debugLog) Debug.Log("TCP Server Stopped and Sockets Cleared.");
     }
 
     void PwmLoop() // Receives Motor Commands
     {
+        TcpListener listener = new TcpListener(IPAddress.Any, pwmPort);
+        listener.Start();
+        byte[] buffer = new byte[16];
+
         try
         {
-            pwmListener = new TcpListener(IPAddress.Any, pwmPort);
-            pwmListener.Start();
-            byte[] buffer = new byte[16];
-
             while (running)
             {
-                if (!pwmListener.Pending()) { Thread.Sleep(50); continue; }
+                if (!listener.Pending()) { Thread.Sleep(100); continue; }
 
-                using (activePwmClient = pwmListener.AcceptTcpClient())
-                using (NetworkStream ns = activePwmClient.GetStream())
+                using (TcpClient client = listener.AcceptTcpClient())
+                using (NetworkStream ns = client.GetStream())
                 {
-                    while (running && activePwmClient.Connected)
+                    while (running && client.Connected)
                     {
                         int read = 0;
-                        while (read < 16 && running)
+                        while (read < 16)
                         {
                             int r = ns.Read(buffer, read, 16 - read);
                             if (r == 0) break;
@@ -138,27 +118,26 @@ public class TCPServer : MonoBehaviour
                 }
             }
         }
-        catch (SocketException) { /* Expected during forced shutdown */ }
-        catch (Exception e) { if (running && debugLog) Debug.LogWarning("PWM Server Error: " + e.Message); }
-        finally { pwmListener?.Stop(); }
+        catch (Exception e) { Debug.LogWarning("PWM Server Error: " + e.Message); }
+        finally { listener.Stop(); }
     }
 
     void FeedbackLoop() // Sends Sensor Data
     {
+        TcpListener listener = new TcpListener(IPAddress.Any, feedbackPort);
+        listener.Start();
+        byte[] buffer = new byte[44];
+
         try
         {
-            feedbackListener = new TcpListener(IPAddress.Any, feedbackPort);
-            feedbackListener.Start();
-            byte[] buffer = new byte[44];
-
             while (running)
             {
-                if (!feedbackListener.Pending()) { Thread.Sleep(50); continue; }
+                if (!listener.Pending()) { Thread.Sleep(100); continue; }
 
-                using (activeFeedbackClient = feedbackListener.AcceptTcpClient())
-                using (NetworkStream ns = activeFeedbackClient.GetStream())
+                using (TcpClient client = listener.AcceptTcpClient())
+                using (NetworkStream ns = client.GetStream())
                 {
-                    while (running && activeFeedbackClient.Connected)
+                    while (running && client.Connected)
                     {
                         lock (feedbackLock)
                         {
@@ -170,8 +149,7 @@ public class TCPServer : MonoBehaviour
                 }
             }
         }
-        catch (SocketException) { /* Expected during forced shutdown */ }
-        catch (Exception e) { if (running && debugLog) Debug.LogWarning("Feedback Server Error: " + e.Message); }
-        finally { feedbackListener?.Stop(); }
+        catch (Exception e) { Debug.LogWarning("Feedback Server Error: " + e.Message); }
+        finally { listener.Stop(); }
     }
 }
