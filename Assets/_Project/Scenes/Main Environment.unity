@@ -131,6 +131,8 @@ GameObject:
   - component: {fileID: 42550307}
   - component: {fileID: 42550311}
   - component: {fileID: 42550312}
+  - component: {fileID: 42550314}
+  - component: {fileID: 42550313}
   m_Layer: 0
   m_Name: Drone_H7
   m_TagString: Untagged
@@ -271,18 +273,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca2bd2f2aeb30264585ceff28ac17c24, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DroneHub
+  operationMode: 0
   server: {fileID: 172392083}
   rb: {fileID: 42550307}
   imu: {fileID: 7216901869423077179}
   barometer: {fileID: 1637023849}
   lidar: {fileID: 3104900056482717126}
   gps: {fileID: 1374443821}
-  voltageScalar: 1
+  voltageScalar: 0.8667
   motorEfficiencyScalars:
-  - 1
-  - 1
-  - 1
-  - 1
+  - 0.7761
+  - 0.7761
+  - 0.7761
+  - 0.7761
   motorTransforms:
   - {fileID: 5805468912441099133}
   - {fileID: 8390305386091351635}
@@ -292,6 +295,36 @@ MonoBehaviour:
   customCenterOfMass: {x: -0.15320511, y: 0.2461882, z: -2.5194175}
   customInertiaTensor: {x: 0.04547, y: 0.04547, z: 0.09094}
   targetTransform: {fileID: 1401661449}
+--- !u!114 &42550313
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 42550300}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 405aece1e65ddfe419a21d108a9d416a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DroneLogger
+  imu: {fileID: 7216901869423077179}
+  gps: {fileID: 1374443821}
+  barometer: {fileID: 1637023849}
+  fileName: digital_twin_log.csv
+--- !u!114 &42550314
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 42550300}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32ec85f57e6b07947a35cd0a3aff6989, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DroneFromLog
+  droneHub: {fileID: 42550312}
+  fileName: physical_model_log.csv
 --- !u!1 &172392082
 GameObject:
   m_ObjectHideFlags: 0

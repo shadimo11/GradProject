@@ -25,6 +25,7 @@ public class DroneHub : MonoBehaviour
     [Header("Scenario Overrides (set by ScenarioInjector)")]
     [Range(0f, 1f)] public float voltageScalar = 1f;
     public float[] motorEfficiencyScalars = new float[] { 1f, 1f, 1f, 1f };
+    private float[] efficiency;
 
     [Header("Motors")]
     [Tooltip("Assign motor transforms in the order: RR - RL - FR - FL")]
@@ -216,8 +217,8 @@ public class DroneHub : MonoBehaviour
             float thrustNewtons = (thrustGrams / 1000f) * 9.81f;
 
             // Apply voltage degradation and per-motor efficiency
-            thrustNewtons *= voltageScalar;
             thrustNewtons *= motorEfficiencyScalars[i];
+            thrustNewtons *= voltageScalar;
 
             if (pwm < 10f) thrustNewtons = 0f;
 
