@@ -5,49 +5,45 @@ using UnityEngine;
 
 public class DroneLogger : MonoBehaviour
 {
-    [Header("Sensors to Log")]
-    public IMU imu;
-    public GPS gps;
-    public Barometer barometer;
-
-    [Header("Log Settings: Edit Before Test")]
-    public string fileName = "digital_twin_log.csv";
+    [Header("Log Settings")]
+    public string fileName = "digital_twin_shadow_log.csv";
 
     private string directoryPath;
     private List<string> logBuffer;
-    private bool isLogging = false;
 
     void Start()
     {
-        // Routes to the requested specific folder inside the Editor
         directoryPath = Path.Combine(Application.dataPath, "_Project/Logs/Digital_Twin");
 
-        // Ensure the directory exists
         if (!Directory.Exists(directoryPath))
         {
             Directory.CreateDirectory(directoryPath);
         }
 
-        // Pre-allocate memory for ~500 seconds of flight at 100Hz to prevent mid-flight GC allocation
-        logBuffer = new List<string>(50000);
-        logBuffer.Add("Time,Roll,Pitch,Yaw,PosX,PosY,Altitude"); // CSV Headers
-        isLogging = true;
+        logBuffer = new List<string>(500000);
+        // The agreed 20-Column Schema
+        logBuffer.Add("Timestamp,PWM_FL,PWM_FR,PWM_RL,PWM_RR,Ref_PosX,Ref_PosY,Ref_PosZ,Ref_RotX,Ref_RotY,Ref_RotZ,DT_PosX,DT_PosY,DT_PosZ,DT_RotX,DT_RotY,DT_RotZ,Pos_Error,Rot_Error,Reset_Trigger");
     }
 
-    void FixedUpdate()
+    // Called precisely by DroneFromLog.cs to ensure data synchronization
+    public void LogShadowTestFrame(float time, float[] pwm, Vector3 refPos, Vector3 refRot, Vector3 dtPos, Vector3 dtRot, float posErr, float rotErr, int trigger)
     {
-        if (!isLogging) return;
-
-        // Extract sensor data safely
-        Vector3 euler = imu != null ? imu.eulerDeg : Vector3.zero;
-        float pX = gps != null ? gps.positionX : 0f;
-        float pY = gps != null ? gps.positionY : 0f;
-        float alt = barometer != null ? barometer.baroAltitude_m : 0f;
-
-        // CultureInfo.InvariantCulture ensures decimals are logged as '.' even on Arabic/European Windows locales
         string line = string.Format(CultureInfo.InvariantCulture,
-            "{0:F3},{1:F3},{2:F3},{3:F3},{4:F5},{5:F5},{6:F3}",
-            Time.fixedTime, euler.x, euler.y, euler.z, pX, pY, alt);
+            "{0:F3}," +                               // Time
+            "{1:F0},{2:F0},{3:F0},{4:F0}," +          // PWM
+            "{5:F4},{6:F4},{7:F4}," +                 // Ref Pos
+            "{8:F3},{9:F3},{10:F3}," +                // Ref Rot
+            "{11:F4},{12:F4},{13:F4}," +              // DT Pos
+            "{14:F3},{15:F3},{16:F3}," +              // DT Rot
+            "{17:F4},{18:F3}," +                      // Errors
+            "{19}",                                   // Trigger
+            time,
+            pwm[0], pwm[1], pwm[2], pwm[3],
+            refPos.x, refPos.y, refPos.z,
+            refRot.x, refRot.y, refRot.z,
+            dtPos.x, dtPos.y, dtPos.z,
+            dtRot.x, dtRot.y, dtRot.z,
+            posErr, rotErr, trigger);
 
         logBuffer.Add(line);
     }
@@ -63,7 +59,7 @@ public class DroneLogger : MonoBehaviour
 
         string fullPath = Path.Combine(directoryPath, fileName);
         File.WriteAllLines(fullPath, logBuffer);
-        Debug.Log($"[DroneLogger] Telemetry saved to {fullPath}. Total records: {logBuffer.Count - 1}");
+        Debug.Log($"[DroneLogger] Shadow Test Log saved to {fullPath}. Total records: {logBuffer.Count - 1}");
 
         logBuffer.Clear();
     }
