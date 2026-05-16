@@ -273,7 +273,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca2bd2f2aeb30264585ceff28ac17c24, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DroneHub
-  operationMode: 0
+  operationMode: 1
   server: {fileID: 172392083}
   rb: {fileID: 42550307}
   imu: {fileID: 7216901869423077179}
@@ -310,6 +310,7 @@ MonoBehaviour:
   imu: {fileID: 7216901869423077179}
   gps: {fileID: 1374443821}
   barometer: {fileID: 1637023849}
+  droneHub: {fileID: 0}
   fileName: digital_twin_shadow_log.csv
 --- !u!114 &42550314
 MonoBehaviour:
@@ -324,7 +325,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DroneFromLog
   droneHub: {fileID: 42550312}
-  fileName: Run5_Battery_DT.csv
+  fileName: hh.csv
 --- !u!1 &172392082
 GameObject:
   m_ObjectHideFlags: 0
@@ -1704,7 +1705,7 @@ Transform:
   m_GameObject: {fileID: 1401661448}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 5, z: 3}
+  m_LocalPosition: {x: 0, y: 5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

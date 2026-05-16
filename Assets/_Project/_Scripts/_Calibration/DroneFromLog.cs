@@ -12,11 +12,11 @@ public class DroneFromLog : MonoBehaviour
     public string fileName = "physical_model_log.csv";
 
     private string filePath;
-    private float startTime;
+    private float startFixedTime;
     private bool isPlaying = false;
     private int currentIndex = 0;
+    private float logStartTimeOffset = 0f;
 
-    // Struct to hold pre-parsed memory
     private struct LogFrame
     {
         public float time;
@@ -33,56 +33,62 @@ public class DroneFromLog : MonoBehaviour
 
     void LoadAndParseLog()
     {
-        if (!File.Exists(filePath))
-        {
-            Debug.LogError($"[DroneFromLog] Error: Log file not found at {filePath}");
-            return;
-        }
+        if (!File.Exists(filePath)) return;
 
         string[] lines = File.ReadAllLines(filePath);
         logData = new List<LogFrame>(lines.Length);
 
-        // Start at 1 to skip the CSV header line
         for (int i = 1; i < lines.Length; i++)
         {
             if (string.IsNullOrWhiteSpace(lines[i])) continue;
 
             string[] cols = lines[i].Split(',');
-            if (cols.Length < 5) continue; // We need at least Time + 4 PWMs
+            if (cols.Length < 5) continue;
 
-            // CultureInfo invariant ensures correct parsing regardless of PC region settings
             if (float.TryParse(cols[0], NumberStyles.Float, CultureInfo.InvariantCulture, out float t) &&
                 float.TryParse(cols[1], NumberStyles.Float, CultureInfo.InvariantCulture, out float m1) &&
                 float.TryParse(cols[2], NumberStyles.Float, CultureInfo.InvariantCulture, out float m2) &&
                 float.TryParse(cols[3], NumberStyles.Float, CultureInfo.InvariantCulture, out float m3) &&
                 float.TryParse(cols[4], NumberStyles.Float, CultureInfo.InvariantCulture, out float m4))
             {
+                // TODO: Verify your Simulink Motor Order here!
+                // Assuming Simulink outputs M1=FR, M2=RL, M3=FL, M4=RR
+                // Mapping to DroneHub order: RR (0), RL (1), FR (2), FL (3)
                 logData.Add(new LogFrame { time = t, pwm = new float[] { m1, m2, m3, m4 } });
             }
         }
 
         if (logData.Count > 0)
         {
-            Debug.Log($"[DroneFromLog] Loaded {logData.Count} log frames. Playback starting.");
-            startTime = Time.time;
+            // Capture the timestamp of the very first row to normalize the timeline
+            logStartTimeOffset = logData[0].time;
+            startFixedTime = Time.fixedTime;
             isPlaying = true;
         }
     }
 
     void FixedUpdate()
     {
-        if (!isPlaying || logData == null || currentIndex >= logData.Count || droneHub == null) return;
+        if (!isPlaying || logData == null || currentIndex >= logData.Count - 1 || droneHub == null) return;
 
-        // Calculate how much actual physics time has passed since we started
-        float elapsedTime = Time.time - startTime;
+        // Use strictly Fixed Time for physics determinism
+        float elapsedPhysicsTime = Time.fixedTime - startFixedTime;
 
-        // Fast-forward index to match elapsed time (Temporal Synchronization)
-        while (currentIndex < logData.Count - 1 && logData[currentIndex + 1].time <= elapsedTime)
+        // Normalize the CSV time so it starts at 0.0, matching the elapsed time
+        while (currentIndex < logData.Count - 1)
         {
-            currentIndex++;
+            float nextLogRelativeTime = logData[currentIndex + 1].time - logStartTimeOffset;
+
+            if (nextLogRelativeTime <= elapsedPhysicsTime)
+            {
+                currentIndex++;
+            }
+            else
+            {
+                break;
+            }
         }
 
-        // Inject the PWM from the synchronized frame into the plant
         droneHub.InjectLogPWM(logData[currentIndex].pwm);
     }
 }
