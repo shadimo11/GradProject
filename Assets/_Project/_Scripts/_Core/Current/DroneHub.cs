@@ -23,9 +23,10 @@ public class DroneHub : MonoBehaviour
     public GPS gps;
 
     [Header("Scenario Overrides (set by ScenarioInjector)")]
-    [Range(0f, 1f)] public float voltageScalar = 1f;
-    public float[] motorEfficiencyScalars = new float[] { 1f, 1f, 1f, 1f };
-    private float[] efficiency;
+    public float currentVoltage = 12.6f; // Default to fully charged 3S LiPo
+    public float referenceVoltage = 12f; // Voltage at which the thrust curve was characterized
+    private float voltageScalar = 1f;
+    public float[] motorEfficiencyScalars = new float[] { 0.7761f, 0.7761f, 0.7761f, 0.7761f };
 
     [Header("Motors")]
     [Tooltip("Assign motor transforms in the order: RR - RL - FR - FL")]
@@ -53,7 +54,7 @@ public class DroneHub : MonoBehaviour
     private float yawSetpoint;
 
     // Internal Data Packet
-    private readonly float[] feedbackFloats = new float[11];  // Number of variables sent back to Simulink
+    public readonly float[] feedbackFloats = new float[11];  // Number of variables sent back to Simulink
     private readonly byte[] sendBuffer = new byte[44];        // Number of bytes sent back to Simulink (floats * 4 bytes each)
 
     void Reset()

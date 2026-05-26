@@ -310,7 +310,7 @@ MonoBehaviour:
   imu: {fileID: 7216901869423077179}
   gps: {fileID: 1374443821}
   barometer: {fileID: 1637023849}
-  droneHub: {fileID: 0}
+  droneHub: {fileID: 42550312}
   fileName: digital_twin_shadow_log.csv
 --- !u!114 &42550314
 MonoBehaviour:
@@ -325,7 +325,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DroneFromLog
   droneHub: {fileID: 42550312}
-  fileName: hh.csv
+  fileName: digital_twin_shadow_log.csv
 --- !u!1 &172392082
 GameObject:
   m_ObjectHideFlags: 0
