@@ -9,21 +9,22 @@ using UnityEngine;
 public class TCPServer : MonoBehaviour
 {
     [Header("Configuration")]
-    public int pwmPort = 9000;      // In: 4 floats (16 bytes)
-    public int feedbackPort = 9001; // Out: 12 floats (48 bytes)
+    public int commandPort = 9000;  // In: 5 floats (20 bytes) - [M1, M2, M3, M4, V_batt]
+    public int feedbackPort = 9001; // Out: 11 floats (44 bytes) - State Observation Vector
     public bool autoStart = true;
     public bool debugLog = false;
 
     // Threading & Data
-    private Thread pwmThread;
+    private Thread commandThread;
     private Thread feedbackThread;
     private volatile bool running = false;
 
-    private float[] latestPwm = new float[4];
-    private bool hasNewPwm = false;
-    private readonly object pwmLock = new object();
+    // Command Vector (Expanded to R^5)
+    private float[] latestCommands = new float[5];
+    private bool hasNewCommands = false;
+    private readonly object commandLock = new object();
 
-    private byte[] feedbackData = new byte[44]; // 11 floats * 4
+    private byte[] feedbackData = new byte[44]; // 11 floats * 4 bytes
     private readonly object feedbackLock = new object();
 
     void Start()
@@ -47,17 +48,18 @@ public class TCPServer : MonoBehaviour
         }
     }
 
-    public bool TryGetPwm(out float[] pwm)
+    // Renamed to reflect the expanded vector payload
+    public bool TryGetCommands(out float[] commands)
     {
-        lock (pwmLock)
+        lock (commandLock)
         {
-            if (hasNewPwm)
+            if (hasNewCommands)
             {
-                pwm = (float[])latestPwm.Clone();
-                hasNewPwm = false;
+                commands = (float[])latestCommands.Clone();
+                hasNewCommands = false;
                 return true;
             }
-            pwm = null;
+            commands = null;
             return false;
         }
     }
@@ -68,11 +70,14 @@ public class TCPServer : MonoBehaviour
     {
         if (running) return;
         running = true;
-        pwmThread = new Thread(PwmLoop) { IsBackground = true };
+
+        commandThread = new Thread(CommandLoop) { IsBackground = true };
         feedbackThread = new Thread(FeedbackLoop) { IsBackground = true };
-        pwmThread.Start();
+
+        commandThread.Start();
         feedbackThread.Start();
-        if (debugLog) Debug.Log("TCP Server Started.");
+
+        if (debugLog) Debug.Log("[TCP] SIL Telemetry Server Started.");
     }
 
     public void StopServer()
@@ -80,17 +85,17 @@ public class TCPServer : MonoBehaviour
         running = false;
     }
 
-    void PwmLoop() // Receives Motor Commands
+    void CommandLoop() // Receives Control Vector u_k
     {
-        TcpListener listener = new TcpListener(IPAddress.Any, pwmPort);
+        TcpListener listener = new TcpListener(IPAddress.Any, commandPort);
         listener.Start();
-        byte[] buffer = new byte[16];
+        byte[] buffer = new byte[20]; // Upgraded to 20 bytes for 5 floats
 
         try
         {
             while (running)
             {
-                if (!listener.Pending()) { Thread.Sleep(100); continue; }
+                if (!listener.Pending()) { Thread.Sleep(10); continue; }
 
                 using (TcpClient client = listener.AcceptTcpClient())
                 using (NetworkStream ns = client.GetStream())
@@ -98,31 +103,34 @@ public class TCPServer : MonoBehaviour
                     while (running && client.Connected)
                     {
                         int read = 0;
-                        while (read < 16)
+                        while (read < 20)
                         {
-                            int r = ns.Read(buffer, read, 16 - read);
+                            int r = ns.Read(buffer, read, 20 - read);
                             if (r == 0) break;
                             read += r;
                         }
-                        if (read < 16) break;
+                        if (read < 20) break;
 
-                        float[] tempPwm = new float[4];
-                        for (int i = 0; i < 4; i++) tempPwm[i] = BitConverter.ToSingle(buffer, i * 4);
-
-                        lock (pwmLock)
+                        float[] tempCmd = new float[5];
+                        for (int i = 0; i < 5; i++)
                         {
-                            latestPwm = tempPwm;
-                            hasNewPwm = true;
+                            tempCmd[i] = BitConverter.ToSingle(buffer, i * 4);
+                        }
+
+                        lock (commandLock)
+                        {
+                            latestCommands = tempCmd;
+                            hasNewCommands = true;
                         }
                     }
                 }
             }
         }
-        catch (Exception e) { Debug.LogWarning("PWM Server Error: " + e.Message); }
+        catch (Exception e) { Debug.LogWarning("[TCP] Command Server Error: " + e.Message); }
         finally { listener.Stop(); }
     }
 
-    void FeedbackLoop() // Sends Sensor Data
+    void FeedbackLoop() // Sends Observation Vector z_k
     {
         TcpListener listener = new TcpListener(IPAddress.Any, feedbackPort);
         listener.Start();
@@ -132,7 +140,7 @@ public class TCPServer : MonoBehaviour
         {
             while (running)
             {
-                if (!listener.Pending()) { Thread.Sleep(100); continue; }
+                if (!listener.Pending()) { Thread.Sleep(10); continue; }
 
                 using (TcpClient client = listener.AcceptTcpClient())
                 using (NetworkStream ns = client.GetStream())
@@ -144,12 +152,12 @@ public class TCPServer : MonoBehaviour
                             Array.Copy(feedbackData, buffer, 44);
                         }
                         ns.Write(buffer, 0, 44);
-                        Thread.Sleep(10); // Send at ~100Hz
+                        Thread.Sleep(10); // Transmit at 100Hz (Ts = 0.01)
                     }
                 }
             }
         }
-        catch (Exception e) { Debug.LogWarning("Feedback Server Error: " + e.Message); }
+        catch (Exception e) { Debug.LogWarning("[TCP] Feedback Server Error: " + e.Message); }
         finally { listener.Stop(); }
     }
 }

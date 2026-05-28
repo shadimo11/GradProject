@@ -20,7 +20,7 @@ public class DroneFromLog : MonoBehaviour
     private struct LogFrame
     {
         public float time;
-        public float[] pwm;
+        public float[] commands;
     }
 
     private List<LogFrame> logData;
@@ -43,24 +43,29 @@ public class DroneFromLog : MonoBehaviour
             if (string.IsNullOrWhiteSpace(lines[i])) continue;
 
             string[] cols = lines[i].Split(',');
-            if (cols.Length < 5) continue;
 
+            // Require at least 6 columns: Time, M1, M2, M3, M4, V_Batt
+            if (cols.Length < 6) continue;
+
+            // Strict parsing of the augmented control vector
             if (float.TryParse(cols[0], NumberStyles.Float, CultureInfo.InvariantCulture, out float t) &&
                 float.TryParse(cols[1], NumberStyles.Float, CultureInfo.InvariantCulture, out float m1) &&
                 float.TryParse(cols[2], NumberStyles.Float, CultureInfo.InvariantCulture, out float m2) &&
                 float.TryParse(cols[3], NumberStyles.Float, CultureInfo.InvariantCulture, out float m3) &&
-                float.TryParse(cols[4], NumberStyles.Float, CultureInfo.InvariantCulture, out float m4))
+                float.TryParse(cols[4], NumberStyles.Float, CultureInfo.InvariantCulture, out float m4) &&
+                float.TryParse(cols[5], NumberStyles.Float, CultureInfo.InvariantCulture, out float vBatt)) // 5th Dimension
             {
-                // TODO: Verify your Simulink Motor Order here!
-                // Assuming Simulink outputs M1=FR, M2=RL, M3=FL, M4=RR
-                // Mapping to DroneHub order: RR (0), RL (1), FR (2), FL (3)
-                logData.Add(new LogFrame { time = t, pwm = new float[] { m1, m2, m3, m4 } });
+                // Injecting the complete R^5 vector
+                logData.Add(new LogFrame
+                {
+                    time = t,
+                    commands = new float[] { m1, m2, m3, m4, vBatt }
+                });
             }
         }
 
         if (logData.Count > 0)
         {
-            // Capture the timestamp of the very first row to normalize the timeline
             logStartTimeOffset = logData[0].time;
             startFixedTime = Time.fixedTime;
             isPlaying = true;
@@ -89,6 +94,6 @@ public class DroneFromLog : MonoBehaviour
             }
         }
 
-        droneHub.InjectLogPWM(logData[currentIndex].pwm);
+        droneHub.InjectLogCommands(logData[currentIndex].commands);
     }
 }

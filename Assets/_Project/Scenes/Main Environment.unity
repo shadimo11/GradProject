@@ -273,14 +273,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca2bd2f2aeb30264585ceff28ac17c24, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DroneHub
-  operationMode: 1
+  operationMode: 0
   server: {fileID: 172392083}
   rb: {fileID: 42550307}
   imu: {fileID: 7216901869423077179}
   barometer: {fileID: 1637023849}
   lidar: {fileID: 3104900056482717126}
   gps: {fileID: 1374443821}
-  voltageScalar: 1
+  referenceVoltage: 12
+  currentVoltage: 12
   motorEfficiencyScalars:
   - 0.7761
   - 0.7761
@@ -302,14 +303,11 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 42550300}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 405aece1e65ddfe419a21d108a9d416a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DroneLogger
-  imu: {fileID: 7216901869423077179}
-  gps: {fileID: 1374443821}
-  barometer: {fileID: 1637023849}
   droneHub: {fileID: 42550312}
   fileName: digital_twin_shadow_log.csv
 --- !u!114 &42550314
@@ -355,7 +353,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 951449069e5c3d540b91f591322906b4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TCPServer
-  pwmPort: 9000
+  commandPort: 9000
   feedbackPort: 9001
   autoStart: 1
   debugLog: 0

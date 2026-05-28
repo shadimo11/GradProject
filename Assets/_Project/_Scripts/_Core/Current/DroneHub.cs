@@ -1,5 +1,4 @@
 using System;
-using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -9,7 +8,7 @@ public class DroneHub : MonoBehaviour
 {
     public enum InputMode { Controller, LogReplay }
     [Header("Operation Mode")]
-    [Tooltip("Choose whether PWM comes from Simulink or a CSV log replay")]
+    [Tooltip("Choose whether commands come from Simulink or a CSV log replay")]
     public InputMode operationMode = InputMode.Controller;
 
     [Header("Dependencies")]
@@ -22,30 +21,32 @@ public class DroneHub : MonoBehaviour
     public Lidar lidar;
     public GPS gps;
 
-    [Header("Scenario Overrides (set by ScenarioInjector)")]
-    public float currentVoltage = 12.6f; // Default to fully charged 3S LiPo
-    public float referenceVoltage = 12f; // Voltage at which the thrust curve was characterized
+    [Header("Battery & Propulsion Dynamics")]
+    [Tooltip("The exact voltage at which thrustA, thrustB, thrustC were experimentally derived")]
+    public float referenceVoltage = 12.0f;
+
+    [Tooltip("The instantaneous voltage received from the Controller/Log")]
+    public float currentVoltage = 12.0f;
+
+    // Calculated dynamically each frame based on (V_batt / V_ref)^2
     private float voltageScalar = 1f;
-    public float[] motorEfficiencyScalars = new float[] { 0.7761f, 0.7761f, 0.7761f, 0.7761f };
+    public float[] motorEfficiencyScalars = new float[] { 1f, 1f, 1f, 1f };
 
     [Header("Motors")]
     [Tooltip("Assign motor transforms in the order: RR - RL - FR - FL")]
     public Transform[] motorTransforms;
-    public float[] motorPwm;
+    public float[] motorPwm; // Rendered in inspector for debugging
     private float pwmMin = 0f;
     private float pwmMax = 255f;
 
     [Header("Physics Constants")]
-    // Coefficients for PWM to Thrust conversion
+    // Coefficients for PWM to Thrust conversion at V_ref
     private float thrustA = 0.0106f;
     private float thrustB = 1.5276f;
     private float thrustC = 5.0422f;
 
     [Header("Manual Physics Overrides")]
-    [Tooltip("Overrides the Rigidbody Center of Mass")]
     public Vector3 customCenterOfMass = new Vector3(-0.1532051f, 0.2461882f, -2.519418f);
-
-    [Tooltip("Overrides the Rigidbody Inertia Tensor (Ixx, Iyy, Izz)")]
     public Vector3 customInertiaTensor = new Vector3(0.04547f, 0.04547f, 0.09094f);
 
     [Header("Setpoints (Virtual Pilot)")]
@@ -53,9 +54,9 @@ public class DroneHub : MonoBehaviour
     private Vector3 positionSetpoint;
     private float yawSetpoint;
 
-    // Internal Data Packet
-    public readonly float[] feedbackFloats = new float[11];  // Number of variables sent back to Simulink
-    private readonly byte[] sendBuffer = new byte[44];        // Number of bytes sent back to Simulink (floats * 4 bytes each)
+    // Internal Data Packets (Publicly exposed for deterministic SIL Logger)
+    public readonly float[] feedbackFloats = new float[11];  // Observation Vector z_k
+    private readonly byte[] sendBuffer = new byte[44];       // 11 floats * 4 bytes
 
     void Reset()
     {
@@ -67,7 +68,7 @@ public class DroneHub : MonoBehaviour
         if (motorTransforms != null)
             motorPwm = new float[motorTransforms.Length];
 
-        // Manual Center of Mass & Inertia
+        // Rigorous Body Kinematics initialization
         rb.centerOfMass = customCenterOfMass;
         rb.inertiaTensor = customInertiaTensor;
         rb.inertiaTensorRotation = Quaternion.identity;
@@ -75,24 +76,23 @@ public class DroneHub : MonoBehaviour
 
     void FixedUpdate()
     {
-        // Update Setpoints from Unity Target (if it exists)
+        // 1. Update Setpoints
         if (targetTransform)
         {
             positionSetpoint = targetTransform.position;
-            yawSetpoint = targetTransform.rotation.eulerAngles.y; // Simplified Yaw
+            yawSetpoint = targetTransform.rotation.eulerAngles.y;
         }
 
-        // TCP: Get incoming Motor PWM from Simulink
-        // Only apply TCP commands if we are in Controller mode.
-        if (operationMode == InputMode.Controller && server != null && server.TryGetPwm(out float[] newPwm))
+        // 2. Data Ingestion: Get incoming augmented command vector u_k
+        if (operationMode == InputMode.Controller && server != null && server.TryGetCommands(out float[] newCommands))
         {
-            ApplyMotorCommands(newPwm);
+            ApplySystemCommands(newCommands);
         }
 
-        // Physics: Apply Forces to Rigidbody
+        // 3. Actuation: Apply computed forces to Rigidbody
         ApplyPhysics();
 
-        // TCP: Aggregate Sensor Data & Send to Simulink
+        // 4. Observation: Aggregate Sensor Data & Transmit
         if (server != null)
         {
             PackSensorData();
@@ -100,11 +100,11 @@ public class DroneHub : MonoBehaviour
         }
     }
 
-    public void InjectLogPWM(float[] loggedPWM)
+    public void InjectLogCommands(float[] loggedCommands)
     {
         if (operationMode == InputMode.LogReplay)
         {
-            ApplyMotorCommands(loggedPWM);
+            ApplySystemCommands(loggedCommands);
         }
     }
 
@@ -113,113 +113,91 @@ public class DroneHub : MonoBehaviour
     // ---------------------------------------------------------
     void PackSensorData()
     {
-        // All feedback data are held here, default values are zeros if data is missing.
         float theta = 0, phi = 0, psi = 0;
         float baro_alt = 0, lidar_alt = 0;
         float pX = 0, pY = 0;
-        float nSV = 0, fix = 0;
 
-        // --- IMU AGGREGATION ---
+        // IMU AGGREGATION
         if (imu != null)
         {
-            // Note: Preserving the mapping from the original script
-            // Original: theta=x, phi=z, psi=y. 
-            // Standard IMU.cs output is x=Pitch, y=Roll, z=Yaw.
-            // This implies the old script swapped Roll/Yaw or used a specific frame.
-            // We keep the old mapping to ensure Simulink compatibility.
-
             theta = imu.eulerDeg.x;
             phi = imu.eulerDeg.y;
             psi = imu.eulerDeg.z;
         }
 
-        // --- GPS AGGREGATION ---
+        // GPS AGGREGATION
         if (gps != null)
         {
             pX = gps.positionX;
             pY = gps.positionY;
-            nSV = gps.numSV;
-            fix = gps.fixFlag;
-        }
-        else
-        {
-            // Fallback to ground truth if no GPS
-            pX = 0;
-            pY = 0;
         }
 
-        // --- BAROMETER AGGREGATION ---
-        if (barometer != null)
-        {
-            baro_alt = barometer.baroAltitude_m;
-        }
-        else
-        {
-            baro_alt = 0;
-        }
-        // --- LIDAR AGGREGATION ---    Skipped in early debugging and testing phase
-        /*
-        if (lidar != null)
-        {
-            lidar_alt = lidar.lidar_alt;
-        }
-        */
+        // BAROMETER AGGREGATION
+        if (barometer != null) baro_alt = barometer.baroAltitude_m;
 
-        // --- Disturbance Debugging ---
+        // Disturbance Debugging & Lidar Pulse hijack
         float pulseSignal = 0f;
         if (Keyboard.current != null && (Keyboard.current.pKey.isPressed || Keyboard.current.rKey.isPressed))
         {
-            pulseSignal = 1f;       // Outputs 1 to Simulink when 'P' or 'R' is held
-        }   
+            pulseSignal = 1f;
+        }
+        lidar_alt = pulseSignal;
 
-        lidar_alt = pulseSignal;    // Hijack Lidar signal with pulse signal
-
-        // --- FILL PACKET (Order MUST match Simulink Unpack) ---
+        // MATRIX ALIGNMENT (z_k)
         feedbackFloats[0] = theta;
         feedbackFloats[1] = phi;
         feedbackFloats[2] = psi;
-
         feedbackFloats[3] = pX;
         feedbackFloats[4] = pY;
         feedbackFloats[5] = baro_alt;
-
         feedbackFloats[6] = lidar_alt;
         feedbackFloats[7] = positionSetpoint.x;
         feedbackFloats[8] = positionSetpoint.z;
         feedbackFloats[9] = positionSetpoint.y;
-
         feedbackFloats[10] = yawSetpoint;
 
-        // --- SERIALIZATION (Float[] -> Byte[]) ---
+        // SERIALIZATION
         Buffer.BlockCopy(feedbackFloats, 0, sendBuffer, 0, sendBuffer.Length);
     }
 
     // ---------------------------------------------------------
     //                      PHYSICS ENGINE
     // ---------------------------------------------------------
-    void ApplyMotorCommands(float[] pwm)
+    void ApplySystemCommands(float[] commands)
     {
-        if (pwm == null) return;
-        for (int i = 0; i < Mathf.Min(pwm.Length, motorPwm.Length); i++)
+        if (commands == null || commands.Length < 5) return;
+
+        // Isolate PWMs
+        for (int i = 0; i < Mathf.Min(4, motorPwm.Length); i++)
         {
-            motorPwm[i] = Mathf.Clamp(pwm[i], pwmMin, pwmMax);
+            motorPwm[i] = Mathf.Clamp(commands[i], pwmMin, pwmMax);
         }
+
+        // Isolate Instantaneous Voltage (Index 4)
+        currentVoltage = commands[4];
     }
 
-    // Modified ApplyPhysics() method
     void ApplyPhysics()
     {
         if (motorTransforms == null) return;
 
+        // Boundary constraint for realistic LiPo limits (Prevents division by zero)
+        float clampedVoltage = Mathf.Clamp(currentVoltage, 9.0f, 13.0f);
+
+        // Derived voltage degradation scalar mapping
+        voltageScalar = (clampedVoltage * clampedVoltage) / (referenceVoltage * referenceVoltage);
+
         for (int i = 0; i < motorTransforms.Length; i++)
         {
             float pwm = motorPwm[i];
+
+            // Baseline polynomial thrust calculation
             float thrustGrams = (thrustA * pwm * pwm) + (thrustB * pwm) + thrustC;
             float thrustNewtons = (thrustGrams / 1000f) * 9.81f;
 
-            // Apply voltage degradation and per-motor efficiency
-            thrustNewtons *= motorEfficiencyScalars[i];
+            // Apply degradation multipliers
             thrustNewtons *= voltageScalar;
+            thrustNewtons *= motorEfficiencyScalars[i];
 
             if (pwm < 10f) thrustNewtons = 0f;
 
