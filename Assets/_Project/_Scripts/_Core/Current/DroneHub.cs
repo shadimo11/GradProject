@@ -30,7 +30,7 @@ public class DroneHub : MonoBehaviour
 
     // Calculated dynamically each frame based on (V_batt / V_ref)^2
     private float voltageScalar = 1f;
-    public float[] motorEfficiencyScalars = new float[] { 1f, 1f, 1f, 1f };
+    public float[] EfficiencyScalars = new float[] { 1f, 1f, 1f, 1f };
 
     [Header("Motors")]
     [Tooltip("Assign motor transforms in the order: RR - RL - FR - FL")]
@@ -197,7 +197,7 @@ public class DroneHub : MonoBehaviour
 
             // Apply degradation multipliers
             thrustNewtons *= voltageScalar;
-            thrustNewtons *= motorEfficiencyScalars[i];
+            thrustNewtons *= EfficiencyScalars[i];
 
             if (pwm < 10f) thrustNewtons = 0f;
 
