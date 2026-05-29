@@ -1,19 +1,39 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Globalization;
 using UnityEngine;
 
 public class DroneLogger : MonoBehaviour
 {
+    public enum LogVariable
+    {
+        Time, M1_RR, M2_RL, M3_FR, M4_FL, V_Batt,
+        Pitch, Roll, Yaw, PosX, PosY, BaroAlt, LidarPulse,
+        SetX, SetZ, SetY, SetYaw
+    }
+
     [Header("Drone Hub Reference")]
-    [Tooltip("Required to read the injected motor PWM values, Battery Voltage, and EXACT feedback array")]
     public DroneHub droneHub;
 
     [Header("Log Settings: Edit Before Test")]
     public string fileName = "digital_twin_log.csv";
 
+    [Header("Dynamic Observation Matrix (P)")]
+    [Tooltip("Modify the order and selection of variables to match your physical CSV log")]
+    public List<LogVariable> telemetryFormat = new List<LogVariable>
+    {
+        // Initialized to match validation_scenario.csv exactly
+        LogVariable.Time,
+        LogVariable.M1_RR, LogVariable.M2_RL, LogVariable.M3_FR, LogVariable.M4_FL,
+        LogVariable.V_Batt,
+        LogVariable.Pitch, LogVariable.Roll, LogVariable.Yaw,
+        LogVariable.BaroAlt
+    };
+
     private string directoryPath;
     private List<string> logBuffer;
+    private StringBuilder rowBuilder;
     private bool isLogging = false;
 
     void Start()
@@ -25,45 +45,75 @@ public class DroneLogger : MonoBehaviour
             Directory.CreateDirectory(directoryPath);
         }
 
-        // Pre-allocate memory to prevent GC spikes during SIL flight
+        // Pre-allocate memory to prevent GC spikes
         logBuffer = new List<string>(50000);
+        rowBuilder = new StringBuilder(256);
 
-        // Header precisely mapped to [Time, u_k^T (R^5), z_k^T (R^11)]
-        logBuffer.Add("Time,M1_RR,M2_RL,M3_FR,M4_FL,V_batt,Theta,Phi,Psi,PosX,PosY,BaroAlt,LidarPulse,SetX,SetZ,SetY,SetYaw");
+        // Dynamically build the CSV Header based on the Inspector selection
+        GenerateHeader();
+
         isLogging = true;
+    }
+
+    private void GenerateHeader()
+    {
+        rowBuilder.Clear();
+        for (int i = 0; i < telemetryFormat.Count; i++)
+        {
+            // Rename internal BaroAlt to "Altitude" to exactly match your physical CSV header
+            string headerName = telemetryFormat[i] == LogVariable.BaroAlt ? "Altitude" : telemetryFormat[i].ToString();
+
+            rowBuilder.Append(headerName);
+            if (i < telemetryFormat.Count - 1) rowBuilder.Append(",");
+        }
+        logBuffer.Add(rowBuilder.ToString());
     }
 
     void FixedUpdate()
     {
         if (!isLogging || droneHub == null) return;
 
-        // Extract Control Input Actuators
-        float m1 = 0f, m2 = 0f, m3 = 0f, m4 = 0f;
-        if (droneHub.motorPwm != null && droneHub.motorPwm.Length >= 4)
-        {
-            m1 = droneHub.motorPwm[0];
-            m2 = droneHub.motorPwm[1];
-            m3 = droneHub.motorPwm[2];
-            m4 = droneHub.motorPwm[3];
-        }
-
-        // Extract the Augmented Input Parameter (Battery Voltage)
-        float vBatt = droneHub.currentVoltage;
-
-        // Extract State Observation (z_k) directly from the Hub to guarantee parity
         float[] fb = droneHub.feedbackFloats;
-
-        // Guard clause to prevent IndexOutOfRange exceptions if Hub isn't initialized
         if (fb == null || fb.Length < 11) return;
 
-        // Format string expanded to 17 parameters (Time + 5 Inputs + 11 States)
-        string line = string.Format(CultureInfo.InvariantCulture,
-            "{0:F3},{1:F1},{2:F1},{3:F1},{4:F1},{5:F2},{6:F3},{7:F3},{8:F3},{9:F5},{10:F5},{11:F3},{12:F1},{13:F3},{14:F3},{15:F3},{16:F3}",
-            Time.fixedTime,
-            m1, m2, m3, m4, vBatt,             // u_k vector
-            fb[0], fb[1], fb[2], fb[3], fb[4], fb[5], fb[6], fb[7], fb[8], fb[9], fb[10]); // z_k vector
+        rowBuilder.Clear();
 
-        logBuffer.Add(line);
+        // Dynamically extract the state vector y_k based on the permutation matrix P
+        for (int i = 0; i < telemetryFormat.Count; i++)
+        {
+            float val = 0f;
+            switch (telemetryFormat[i])
+            {
+                // Temporal
+                case LogVariable.Time: val = (float)Time.fixedTimeAsDouble; break;
+
+                // Actuator u_k
+                case LogVariable.M1_RR: val = droneHub.motorPwm[0]; break;
+                case LogVariable.M2_RL: val = droneHub.motorPwm[1]; break;
+                case LogVariable.M3_FR: val = droneHub.motorPwm[2]; break;
+                case LogVariable.M4_FL: val = droneHub.motorPwm[3]; break;
+                case LogVariable.V_Batt: val = droneHub.currentVoltage; break;
+
+                // State z_k (From DroneHub.cs feedbackFloats matrix alignment)
+                case LogVariable.Pitch: val = fb[0]; break;
+                case LogVariable.Roll: val = fb[1]; break;
+                case LogVariable.Yaw: val = fb[2]; break;
+                case LogVariable.PosX: val = fb[3]; break;
+                case LogVariable.PosY: val = fb[4]; break;
+                case LogVariable.BaroAlt: val = transform.position.y; break;
+                case LogVariable.LidarPulse: val = fb[6]; break;
+                case LogVariable.SetX: val = fb[7]; break;
+                case LogVariable.SetZ: val = fb[8]; break;
+                case LogVariable.SetY: val = fb[9]; break;
+                case LogVariable.SetYaw: val = fb[10]; break;
+            }
+
+            // Append with deterministic format precision
+            rowBuilder.Append(val.ToString("F4", CultureInfo.InvariantCulture));
+            if (i < telemetryFormat.Count - 1) rowBuilder.Append(",");
+        }
+
+        logBuffer.Add(rowBuilder.ToString());
     }
 
     void OnDisable()
@@ -77,7 +127,7 @@ public class DroneLogger : MonoBehaviour
 
         string fullPath = Path.Combine(directoryPath, fileName);
         File.WriteAllLines(fullPath, logBuffer);
-        Debug.Log($"[DroneLogger] SIL Telemetry saved to {fullPath}. Total discrete frames: {logBuffer.Count - 1}");
+        Debug.Log($"[DroneLogger] Dynamic SIL Telemetry saved to {fullPath}. Total records: {logBuffer.Count - 1}");
 
         logBuffer.Clear();
     }

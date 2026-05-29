@@ -160,8 +160,8 @@ Rigidbody:
   m_ExcludeLayers:
     serializedVersion: 2
     m_Bits: 0
-  m_ImplicitCom: 0
-  m_ImplicitTensor: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 1
@@ -273,7 +273,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca2bd2f2aeb30264585ceff28ac17c24, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DroneHub
-  operationMode: 0
+  operationMode: 1
   server: {fileID: 172392083}
   rb: {fileID: 42550307}
   imu: {fileID: 7216901869423077179}
@@ -303,14 +303,13 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 42550300}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 405aece1e65ddfe419a21d108a9d416a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DroneLogger
   droneHub: {fileID: 42550312}
-  fileName: digital_twin_validation.csv
-  telemetryFormat: 0000000001000000020000000300000004000000050000000600000007000000080000000b000000
+  fileName: digital_twin_shadow_log.csv
 --- !u!114 &42550314
 MonoBehaviour:
   m_ObjectHideFlags: 0
