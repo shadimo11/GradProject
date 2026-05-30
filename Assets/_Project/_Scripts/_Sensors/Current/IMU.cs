@@ -101,8 +101,12 @@ public class IMU : MonoBehaviour
         // Yaw (Rotation around Up/Z): Unity Y-rotation.
         // RHS Heading decreases Clockwise. (Unity Y-rotation Right is +ve)
         float bnoYaw = -Wrap180(eul.y);
+        // Add inside FixedUpdate() after bnoYaw calculation:
+        float pNoise = rpNoiseDeg * RandGaussian();
+        float rNoise = rpNoiseDeg * RandGaussian();
+        float yNoise = yawNoiseDeg * RandGaussian();
 
-        Vector3 eulerHardware = new Vector3(bnoPitch, bnoRoll, bnoYaw);
+        Vector3 eulerHardware = new Vector3(bnoPitch + pNoise, bnoRoll + rNoise, bnoYaw + yNoise);
 
         // Delayed Outputs
         eulerDeg = eulerDelay.PushAndGet(eulerHardware);

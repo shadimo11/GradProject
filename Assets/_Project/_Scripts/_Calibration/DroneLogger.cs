@@ -9,7 +9,7 @@ public class DroneLogger : MonoBehaviour
     public enum LogVariable
     {
         Time, M1_RR, M2_RL, M3_FR, M4_FL, V_Batt,
-        Pitch, Roll, Yaw, PosX, PosY, BaroAlt, LidarPulse,
+        Pitch, Roll, Yaw, PosX, PosY, Alt, Disturbance,
         SetX, SetZ, SetY, SetYaw
     }
 
@@ -28,7 +28,7 @@ public class DroneLogger : MonoBehaviour
         LogVariable.M1_RR, LogVariable.M2_RL, LogVariable.M3_FR, LogVariable.M4_FL,
         LogVariable.V_Batt,
         LogVariable.Pitch, LogVariable.Roll, LogVariable.Yaw,
-        LogVariable.BaroAlt
+        LogVariable.Alt
     };
 
     private string directoryPath;
@@ -60,8 +60,8 @@ public class DroneLogger : MonoBehaviour
         rowBuilder.Clear();
         for (int i = 0; i < telemetryFormat.Count; i++)
         {
-            // Rename internal BaroAlt to "Altitude" to exactly match your physical CSV header
-            string headerName = telemetryFormat[i] == LogVariable.BaroAlt ? "Altitude" : telemetryFormat[i].ToString();
+            // Rename internal Alt to "Altitude" to exactly match your physical CSV header
+            string headerName = telemetryFormat[i] == LogVariable.Alt ? "Altitude" : telemetryFormat[i].ToString();
 
             rowBuilder.Append(headerName);
             if (i < telemetryFormat.Count - 1) rowBuilder.Append(",");
@@ -100,8 +100,8 @@ public class DroneLogger : MonoBehaviour
                 case LogVariable.Yaw: val = fb[2]; break;
                 case LogVariable.PosX: val = fb[3]; break;
                 case LogVariable.PosY: val = fb[4]; break;
-                case LogVariable.BaroAlt: val = transform.position.y; break;
-                case LogVariable.LidarPulse: val = fb[6]; break;
+                case LogVariable.Alt: val = transform.position.y; break;
+                case LogVariable.Disturbance: val = fb[6]; break;
                 case LogVariable.SetX: val = fb[7]; break;
                 case LogVariable.SetZ: val = fb[8]; break;
                 case LogVariable.SetY: val = fb[9]; break;

@@ -129,6 +129,7 @@ GameObject:
   m_Component:
   - component: {fileID: 42550308}
   - component: {fileID: 42550307}
+  - component: {fileID: 42550315}
   - component: {fileID: 42550311}
   - component: {fileID: 42550312}
   - component: {fileID: 42550314}
@@ -148,7 +149,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 42550300}
   serializedVersion: 5
-  m_Mass: 1.75
+  m_Mass: 1.76
   m_LinearDamping: 0.15
   m_AngularDamping: 0.3
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -160,13 +161,13 @@ Rigidbody:
   m_ExcludeLayers:
     serializedVersion: 2
     m_Bits: 0
-  m_ImplicitCom: 0
-  m_ImplicitTensor: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 1
+  m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 1
+  m_CollisionDetection: 0
 --- !u!4 &42550308
 Transform:
   m_ObjectHideFlags: 0
@@ -261,6 +262,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DisturbanceInjector
   disturbanceAngularVelocity: 20
+  windGustVelocity: {x: 5, y: 0, z: 0}
 --- !u!114 &42550312
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -282,7 +284,8 @@ MonoBehaviour:
   gps: {fileID: 1374443821}
   referenceVoltage: 12
   currentVoltage: 12
-  motorEfficiencyScalars:
+  voltageScalar: 0.8667
+  EfficiencyScalars:
   - 0.7761
   - 0.7761
   - 0.7761
@@ -293,7 +296,7 @@ MonoBehaviour:
   - {fileID: 8484047515731618561}
   - {fileID: 224851469009091928}
   motorPwm: []
-  customCenterOfMass: {x: -0.15320511, y: 0.2461882, z: -2.5194175}
+  customCenterOfMass: {x: -0.1532051, y: 0.2461882, z: -2.5194175}
   customInertiaTensor: {x: 0.04547, y: 0.04547, z: 0.09094}
   targetTransform: {fileID: 1401661449}
 --- !u!114 &42550313
@@ -309,8 +312,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DroneLogger
   droneHub: {fileID: 42550312}
-  fileName: digital_twin_validation.csv
-  telemetryFormat: 0000000001000000020000000300000004000000050000000600000007000000080000000b000000
+  fileName: DT_Hover_Wind_5m.csv
+  telemetryFormat: 0000000001000000020000000300000004000000050000000600000007000000080000000b0000000c000000
 --- !u!114 &42550314
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -325,6 +328,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DroneFromLog
   droneHub: {fileID: 42550312}
   fileName: validation_scenario.csv
+--- !u!114 &42550315
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 42550300}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3cf6284b14dedd0428d57138c727c702, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ContinuousWindInjector
+  randomSeed: 42
+  meanWindSpeed: 2
+  windDirection: {x: 1, y: 0, z: 0}
+  turbulenceIntensity: 1.5
+  timeConstant: 2
+  lumpedDragCoefficient: 0.05
+  centerOfPressureOffset: {x: 0, y: 0.05, z: 0}
 --- !u!1 &172392082
 GameObject:
   m_ObjectHideFlags: 0
@@ -1704,7 +1726,7 @@ Transform:
   m_GameObject: {fileID: 1401661448}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: 0}
+  m_LocalPosition: {x: 0, y: 5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

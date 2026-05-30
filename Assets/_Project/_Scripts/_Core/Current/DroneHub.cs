@@ -29,8 +29,8 @@ public class DroneHub : MonoBehaviour
     public float currentVoltage = 12.0f;
 
     // Calculated dynamically each frame based on (V_batt / V_ref)^2
-    private float voltageScalar = 1f;
-    public float[] EfficiencyScalars = new float[] { 1f, 1f, 1f, 1f };
+    public float voltageScalar = 1f;
+    public float[] EfficiencyScalars = new float[] { 0.7761f, 0.7761f, 0.7761f, 0.7761f };
 
     [Header("Motors")]
     [Tooltip("Assign motor transforms in the order: RR - RL - FR - FL")]
@@ -114,7 +114,7 @@ public class DroneHub : MonoBehaviour
     void PackSensorData()
     {
         float theta = 0, phi = 0, psi = 0;
-        float baro_alt = 0, lidar_alt = 0;
+        float baro_alt = 0;
         float pX = 0, pY = 0;
 
         // IMU AGGREGATION
@@ -141,7 +141,7 @@ public class DroneHub : MonoBehaviour
         {
             pulseSignal = 1f;
         }
-        lidar_alt = pulseSignal;
+        float disturbance = pulseSignal;
 
         // MATRIX ALIGNMENT (z_k)
         feedbackFloats[0] = theta;
@@ -150,7 +150,7 @@ public class DroneHub : MonoBehaviour
         feedbackFloats[3] = pX;
         feedbackFloats[4] = pY;
         feedbackFloats[5] = baro_alt;
-        feedbackFloats[6] = lidar_alt;
+        feedbackFloats[6] = disturbance;
         feedbackFloats[7] = positionSetpoint.x;
         feedbackFloats[8] = positionSetpoint.z;
         feedbackFloats[9] = positionSetpoint.y;
@@ -185,7 +185,7 @@ public class DroneHub : MonoBehaviour
         float clampedVoltage = Mathf.Clamp(currentVoltage, 9.0f, 13.0f);
 
         // Derived voltage degradation scalar mapping
-        voltageScalar = (clampedVoltage * clampedVoltage) / (referenceVoltage * referenceVoltage);
+        // voltageScalar = (clampedVoltage * clampedVoltage) / (referenceVoltage * referenceVoltage);
 
         for (int i = 0; i < motorTransforms.Length; i++)
         {
