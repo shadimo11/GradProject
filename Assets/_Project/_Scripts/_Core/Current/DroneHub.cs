@@ -55,8 +55,8 @@ public class DroneHub : MonoBehaviour
     private float yawSetpoint;
 
     // Internal Data Packets (Publicly exposed for deterministic SIL Logger)
-    public readonly float[] feedbackFloats = new float[11];  // Observation Vector z_k
-    private readonly byte[] sendBuffer = new byte[44];       // 11 floats * 4 bytes
+    public readonly float[] feedbackFloats = new float[13];  // Observation Vector z_k
+    private readonly byte[] sendBuffer = new byte[52];       // 13 floats * 4 bytes
 
     void Reset()
     {
@@ -136,12 +136,21 @@ public class DroneHub : MonoBehaviour
         if (barometer != null) baro_alt = barometer.baroAltitude_m;
 
         // Disturbance Debugging & Lidar Pulse hijack
-        float pulseSignal = 0f;
-        if (Keyboard.current != null && (Keyboard.current.pKey.isPressed || Keyboard.current.rKey.isPressed))
+        float windMag = 0f;
+        ContinuousWindInjector windInj = GetComponent<ContinuousWindInjector>();
+        if (windInj != null) windMag = windInj.CurrentWindMagnitude;
+
+        // 2. Fetch Discrete Disturbance Signals (+1/-1 logic)
+        float pDist = 0f;
+        float rDist = 0f;
+        if (Keyboard.current != null)
         {
-            pulseSignal = 1f;
+            if (Keyboard.current.fKey.isPressed) pDist = 1f;       // Forward
+            else if (Keyboard.current.bKey.isPressed) pDist = -1f; // Backward
+
+            if (Keyboard.current.lKey.isPressed) rDist = 1f;       // Left
+            else if (Keyboard.current.rKey.isPressed) rDist = -1f; // Right
         }
-        float disturbance = pulseSignal;
 
         // MATRIX ALIGNMENT (z_k)
         feedbackFloats[0] = theta;
@@ -150,11 +159,13 @@ public class DroneHub : MonoBehaviour
         feedbackFloats[3] = pX;
         feedbackFloats[4] = pY;
         feedbackFloats[5] = baro_alt;
-        feedbackFloats[6] = disturbance;
-        feedbackFloats[7] = positionSetpoint.x;
-        feedbackFloats[8] = positionSetpoint.z;
-        feedbackFloats[9] = positionSetpoint.y;
-        feedbackFloats[10] = yawSetpoint;
+        feedbackFloats[6] = windMag;           // New Index 6
+        feedbackFloats[7] = pDist;             // New Index 7
+        feedbackFloats[8] = rDist;             // New Index 8
+        feedbackFloats[9] = positionSetpoint.x;  // Shifted to 9
+        feedbackFloats[10] = positionSetpoint.z; // Shifted to 10
+        feedbackFloats[11] = positionSetpoint.y; // Shifted to 11
+        feedbackFloats[12] = yawSetpoint;
 
         // SERIALIZATION
         Buffer.BlockCopy(feedbackFloats, 0, sendBuffer, 0, sendBuffer.Length);

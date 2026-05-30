@@ -10,7 +10,7 @@ public class TCPServer : MonoBehaviour
 {
     [Header("Configuration")]
     public int commandPort = 9000;  // In: 5 floats (20 bytes) - [M1, M2, M3, M4, V_batt]
-    public int feedbackPort = 9001; // Out: 11 floats (44 bytes) - State Observation Vector
+    public int feedbackPort = 9001; // Out: 13 floats (52 bytes) - State Observation Vector
     public bool autoStart = true;
     public bool debugLog = false;
 
@@ -24,7 +24,7 @@ public class TCPServer : MonoBehaviour
     private bool hasNewCommands = false;
     private readonly object commandLock = new object();
 
-    private byte[] feedbackData = new byte[44]; // 11 floats * 4 bytes
+    private byte[] feedbackData = new byte[52]; // 13 floats * 4 bytes
     private readonly object feedbackLock = new object();
 
     void Start()
@@ -134,7 +134,7 @@ public class TCPServer : MonoBehaviour
     {
         TcpListener listener = new TcpListener(IPAddress.Any, feedbackPort);
         listener.Start();
-        byte[] buffer = new byte[44];
+        byte[] buffer = new byte[52];
 
         try
         {
@@ -149,9 +149,9 @@ public class TCPServer : MonoBehaviour
                     {
                         lock (feedbackLock)
                         {
-                            Array.Copy(feedbackData, buffer, 44);
+                            Array.Copy(feedbackData, buffer, 52);
                         }
-                        ns.Write(buffer, 0, 44);
+                        ns.Write(buffer, 0, 52);
                         Thread.Sleep(10); // Transmit at 100Hz (Ts = 0.01)
                     }
                 }

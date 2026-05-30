@@ -24,6 +24,10 @@ public class ContinuousWindInjector : MonoBehaviour
     private Rigidbody rb;
     private Vector3 currentTurbulence = Vector3.zero;
 
+    // New SIL State Variables for Telemetry Synchronization
+    private bool isWindActive = false;
+    public float CurrentWindMagnitude { get; private set; } = 0f;
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -31,8 +35,26 @@ public class ContinuousWindInjector : MonoBehaviour
         windDirection = windDirection.normalized;
     }
 
+    void Update()
+    {
+        // Toggle State Machine on 'W' press (Rising Edge triggers state flip)
+        if (UnityEngine.InputSystem.Keyboard.current != null &&
+            UnityEngine.InputSystem.Keyboard.current.wKey.wasPressedThisFrame)
+        {
+            isWindActive = !isWindActive;
+            Debug.Log($"[SIL] Continuous Wind Active: {isWindActive}");
+        }
+    }
+
     void FixedUpdate()
     {
+        // Bypass physics computation and reset telemetry state if deactivated
+        if (!isWindActive)
+        {
+            CurrentWindMagnitude = 0f;
+            return;
+        }
+
         float dt = Time.fixedDeltaTime;
 
         // 1. Generate Gaussian White Noise using Box-Muller Transform
@@ -52,6 +74,9 @@ public class ContinuousWindInjector : MonoBehaviour
 
         // 3. Construct total wind vector
         Vector3 totalWindVelocity = (windDirection * meanWindSpeed) + currentTurbulence;
+
+        // Expose instantaneous magnitude for TCP serialization to GCS/Simulink
+        CurrentWindMagnitude = totalWindVelocity.magnitude;
 
         // 4. Calculate Aerodynamic Force (F = Kd * |V| * V)
         Vector3 dragForce = lumpedDragCoefficient * totalWindVelocity.magnitude * totalWindVelocity;

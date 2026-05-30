@@ -10,9 +10,6 @@ public class DisturbanceInjector : MonoBehaviour
     private float inertia = 0.04547f;
     private float disturbanceTorque;
 
-    [Header("Translational Wind Gust Parameters")]
-    [Tooltip("Predetermined wind gust vector in m/s (World Space)")]
-    public Vector3 windGustVelocity = new Vector3(5f, 0f, 0f);
 
     private Rigidbody rb;
 
@@ -30,13 +27,31 @@ public class DisturbanceInjector : MonoBehaviour
 
     void Update()
     {
-        // Safety check to ensure a keyboard is connected
         if (Keyboard.current == null) return;
 
-        // Poll inputs during the rendering frame
-        if (Keyboard.current.pKey.wasPressedThisFrame) injectPitch = true;
-        if (Keyboard.current.rKey.wasPressedThisFrame) injectRoll = true;
-        if (Keyboard.current.wKey.wasPressedThisFrame) injectWind = true;
+        // Pitch Disturbance (X-Axis)
+        if (Keyboard.current.fKey.wasPressedThisFrame)
+        {
+            rb.AddRelativeTorque(Vector3.right * disturbanceTorque, ForceMode.Impulse);
+            Debug.Log("[SIL] Pitch Forward Disturbance Applied");
+        }
+        else if (Keyboard.current.bKey.wasPressedThisFrame)
+        {
+            rb.AddRelativeTorque(Vector3.left * disturbanceTorque, ForceMode.Impulse);
+            Debug.Log("[SIL] Pitch Backward Disturbance Applied");
+        }
+
+        // Roll Disturbance (Z-Axis)
+        if (Keyboard.current.lKey.wasPressedThisFrame)
+        {
+            rb.AddRelativeTorque(Vector3.forward * disturbanceTorque, ForceMode.Impulse);
+            Debug.Log("[SIL] Roll Left Disturbance Applied");
+        }
+        else if (Keyboard.current.rKey.wasPressedThisFrame)
+        {
+            rb.AddRelativeTorque(Vector3.back * disturbanceTorque, ForceMode.Impulse);
+            Debug.Log("[SIL] Roll Right Disturbance Applied");
+        }
     }
 
     void FixedUpdate()
@@ -55,14 +70,6 @@ public class DisturbanceInjector : MonoBehaviour
             rb.AddRelativeTorque(Vector3.forward * disturbanceTorque, ForceMode.Impulse);
             Debug.Log($"[SIL] Roll Disturbance Applied: {disturbanceTorque} N.m.s");
             injectRoll = false;
-        }
-
-        if (injectWind)
-        {
-            // Apply a discrete translational velocity change in the World frame to simulate a lateral gust
-            rb.AddForce(windGustVelocity, ForceMode.VelocityChange);
-            Debug.Log($"[SIL] Wind Gust Applied: {windGustVelocity} m/s");
-            injectWind = false;
         }
     }
 }
