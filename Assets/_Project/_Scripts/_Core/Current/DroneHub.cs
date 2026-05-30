@@ -35,7 +35,14 @@ public class DroneHub : MonoBehaviour
     [Header("Motors")]
     [Tooltip("Assign motor transforms in the order: RR - RL - FR - FL")]
     public Transform[] motorTransforms;
+    private float motorKV = 1000f;
+    [Tooltip("Rotation direction scalar (1 for CW, -1 for CCW). Mapped to RR, RL, FR, FL (QuadX Configuration)")]
+    public float[] spinDirections = new float[] { 1f, -1f, -1f, 1f }; // RR, RL, FR, FL
+
+
     public float[] motorPwm; // Rendered in inspector for debugging
+
+
     private float pwmMin = 0f;
     private float pwmMax = 255f;
 
@@ -72,6 +79,35 @@ public class DroneHub : MonoBehaviour
         rb.centerOfMass = customCenterOfMass;
         rb.inertiaTensor = customInertiaTensor;
         rb.inertiaTensorRotation = Quaternion.identity;
+    }
+
+    void Update()
+    {
+        // Guard clause to prevent NullReferenceExceptions if models aren't assigned
+        if (motorTransforms == null) return;
+
+        // 1. Calculate Theoretical Max RPM based on instantaneous voltage
+        float clampedVoltage = Mathf.Clamp(currentVoltage, 9.0f, 13.0f);
+        float maxRPM = motorKV * clampedVoltage;
+
+        // 2. Iterate through each motor and apply rotational kinematics
+        for (int i = 0; i < motorTransforms.Length; i++)
+        {
+            // Normalize ESC PWM signal to a 0.0 - 1.0 Throttle Coefficient
+            float throttle = Mathf.Clamp01(motorPwm[i] / pwmMax);
+
+            // Calculate instantaneous RPM
+            float currentRPM = throttle * maxRPM;
+
+            // Convert RPM to Degrees per Second
+            float degreesPerSecond = currentRPM * 6f;
+
+            // Retrieve direction scalar safely
+            float direction = (i < spinDirections.Length) ? spinDirections[i] : 1f;
+
+            // Apply pure local-space rotation (around the Y-axis) tied to rendering framerate
+            motorTransforms[i].Rotate(Vector3.up, direction * degreesPerSecond * Time.deltaTime, Space.Self);
+        }
     }
 
     void FixedUpdate()

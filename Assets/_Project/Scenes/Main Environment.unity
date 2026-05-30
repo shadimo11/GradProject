@@ -262,7 +262,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DisturbanceInjector
   disturbanceAngularVelocity: 20
-  windGustVelocity: {x: 5, y: 0, z: 0}
 --- !u!114 &42550312
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -295,6 +294,11 @@ MonoBehaviour:
   - {fileID: 8390305386091351635}
   - {fileID: 8484047515731618561}
   - {fileID: 224851469009091928}
+  spinDirections:
+  - 1
+  - -1
+  - -1
+  - 1
   motorPwm: []
   customCenterOfMass: {x: -0.1532051, y: 0.2461882, z: -2.5194175}
   customInertiaTensor: {x: 0.04547, y: 0.04547, z: 0.09094}
@@ -99936,9 +99940,9 @@ MonoBehaviour:
   sampleRateHz: 100
   gravityMagnitude: 9.80665
   calibSys: 3
-  rpNoiseDeg: 0
+  rpNoiseDeg: 0.2
   yawNoiseDeg: 0
-  linAccNoise: 0
+  linAccNoise: 0.01
   eulerDeg: {x: 0, y: 0, z: 0}
   linearAccel_mps2: {x: 0, y: 0, z: 0}
   logToConsole: 1
