@@ -150,8 +150,8 @@ Rigidbody:
   m_GameObject: {fileID: 42550300}
   serializedVersion: 5
   m_Mass: 1.76
-  m_LinearDamping: 0.15
-  m_AngularDamping: 0.3
+  m_LinearDamping: 0
+  m_AngularDamping: 0
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
@@ -165,9 +165,9 @@ Rigidbody:
   m_ImplicitTensor: 1
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 0
-  m_Constraints: 0
-  m_CollisionDetection: 0
+  m_Interpolate: 1
+  m_Constraints: 46
+  m_CollisionDetection: 1
 --- !u!4 &42550308
 Transform:
   m_ObjectHideFlags: 0
@@ -176,8 +176,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 42550300}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: 0.00054537266, y: 0.0000018442454, z: -0.0033816046, w: 0.99999416}
+  m_LocalPosition: {x: 0, y: 0.26992, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -248,7 +248,7 @@ Transform:
   - {fileID: 1984030823244197917}
   - {fileID: 7022650861700860411}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0.0625, y: 0, z: -0.3875}
 --- !u!114 &42550311
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -274,7 +274,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca2bd2f2aeb30264585ceff28ac17c24, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DroneHub
-  operationMode: 0
+  operationMode: 1
   server: {fileID: 172392083}
   rb: {fileID: 42550307}
   imu: {fileID: 7216901869423077179}
@@ -283,12 +283,12 @@ MonoBehaviour:
   gps: {fileID: 1374443821}
   referenceVoltage: 12
   currentVoltage: 12
-  voltageScalar: 0.8667
+  voltageScalar: 1
   EfficiencyScalars:
-  - 0.7761
-  - 0.7761
-  - 0.7761
-  - 0.7761
+  - 0.9105
+  - 0.9105
+  - 0.937
+  - 0.937
   motorTransforms:
   - {fileID: 5805468912441099133}
   - {fileID: 8390305386091351635}
@@ -301,7 +301,7 @@ MonoBehaviour:
   - 1
   motorPwm: []
   customCenterOfMass: {x: -0.1532051, y: 0.2461882, z: -2.5194175}
-  customInertiaTensor: {x: 0.04547, y: 0.04547, z: 0.09094}
+  customInertiaTensor: {x: 0.04547, y: 0.09091, z: 0.04547}
   targetTransform: {fileID: 1401661449}
 --- !u!114 &42550313
 MonoBehaviour:
@@ -310,14 +310,14 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 42550300}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 405aece1e65ddfe419a21d108a9d416a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DroneLogger
   droneHub: {fileID: 42550312}
-  fileName: DT_Hover_Wind_5m.csv
-  telemetryFormat: 0000000001000000020000000300000004000000050000000600000007000000080000000b0000000c000000
+  fileName: legacytemp22.csv
+  telemetryFormat: 00000000010000000200000003000000040000000500000006000000070000000b000000
 --- !u!114 &42550314
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -325,13 +325,13 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 42550300}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 32ec85f57e6b07947a35cd0a3aff6989, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DroneFromLog
   droneHub: {fileID: 42550312}
-  fileName: validation_scenario.csv
+  fileName: validation_scenario5.csv
 --- !u!114 &42550315
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2684,7 +2684,7 @@ Transform:
   m_GameObject: {fileID: 1615999949}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
-  m_LocalPosition: {x: 0, y: -0.125, z: 0}
+  m_LocalPosition: {x: 0, y: -0.12223, z: 0}
   m_LocalScale: {x: 5.99, y: 0.1, z: 6.43}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -99940,9 +99940,9 @@ MonoBehaviour:
   sampleRateHz: 100
   gravityMagnitude: 9.80665
   calibSys: 3
-  rpNoiseDeg: 0.2
+  rpNoiseDeg: 0
   yawNoiseDeg: 0
-  linAccNoise: 0.01
+  linAccNoise: 0
   eulerDeg: {x: 0, y: 0, z: 0}
   linearAccel_mps2: {x: 0, y: 0, z: 0}
   logToConsole: 1

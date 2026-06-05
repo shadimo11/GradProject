@@ -100,7 +100,7 @@ public class DroneLogger : MonoBehaviour
                 case LogVariable.Yaw: val = fb[2]; break;
                 case LogVariable.PosX: val = fb[3]; break;
                 case LogVariable.PosY: val = fb[4]; break;
-                case LogVariable.Alt: val = transform.position.y; break;
+                case LogVariable.Alt: val = fb[5]; break;
                 case LogVariable.Disturbance: val = fb[6]; break;
                 case LogVariable.SetX: val = fb[7]; break;
                 case LogVariable.SetZ: val = fb[8]; break;

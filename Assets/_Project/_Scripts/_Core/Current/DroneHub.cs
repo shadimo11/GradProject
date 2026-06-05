@@ -54,7 +54,7 @@ public class DroneHub : MonoBehaviour
 
     [Header("Manual Physics Overrides")]
     public Vector3 customCenterOfMass = new Vector3(-0.1532051f, 0.2461882f, -2.519418f);
-    public Vector3 customInertiaTensor = new Vector3(0.04547f, 0.04547f, 0.09094f);
+    public Vector3 customInertiaTensor = new Vector3(0.04547f, 0.09094f, 0.04547f);
 
     [Header("Setpoints (Virtual Pilot)")]
     public Transform targetTransform;
@@ -232,7 +232,7 @@ public class DroneHub : MonoBehaviour
         float clampedVoltage = Mathf.Clamp(currentVoltage, 9.0f, 13.0f);
 
         // Derived voltage degradation scalar mapping
-        // voltageScalar = (clampedVoltage * clampedVoltage) / (referenceVoltage * referenceVoltage);
+        voltageScalar = (clampedVoltage * clampedVoltage) / (referenceVoltage * referenceVoltage);
 
         for (int i = 0; i < motorTransforms.Length; i++)
         {

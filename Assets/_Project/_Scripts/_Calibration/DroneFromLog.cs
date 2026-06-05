@@ -68,22 +68,32 @@ public class DroneFromLog : MonoBehaviour
             logStartTimeOffset = logData[0].time;
             startFixedTime = Time.fixedTime;
             isPlaying = true;
+
+            // --- NEW: RIGOROUS INITIALIZATION ---
+            // Pre-load the t=0 boundary conditions directly into the plant
+            if (droneHub != null)
+            {
+                droneHub.InjectLogCommands(logData[0].commands);
+            }
         }
+
     }
 
     void FixedUpdate()
     {
         if (!isPlaying || logData == null || currentIndex >= logData.Count - 1 || droneHub == null) return;
 
-        // Use strictly Fixed Time for physics determinism
         float elapsedPhysicsTime = Time.fixedTime - startFixedTime;
 
-        // Normalize the CSV time so it starts at 0.0, matching the elapsed time
+        // Define a half-frame tolerance to prevent floating-point drift
+        float epsilon = Time.fixedDeltaTime * 0.5f;
+
         while (currentIndex < logData.Count - 1)
         {
             float nextLogRelativeTime = logData[currentIndex + 1].time - logStartTimeOffset;
 
-            if (nextLogRelativeTime <= elapsedPhysicsTime)
+            // NEW: Evaluate with epsilon window
+            if (nextLogRelativeTime <= (elapsedPhysicsTime + epsilon))
             {
                 currentIndex++;
             }
