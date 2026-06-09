@@ -6,12 +6,14 @@
 3. Psi
 4. Unity_X_FB
 5. Unity_Y_FB
-6. Barometer_ALT (ALT_FB input of Altitude Controller & Altitude_FB of Stateflow Chart)
-7. LiDAR_ALT
-8. Unity_X_SP
-9. Unity_Y_SP
-10. Unity_ALT_SP
-11. Unity_Yaw_SP
+6. Unity_ALT_FB (ALT_FB input of Altitude Controller & Altitude_FB of Stateflow Chart)
+7. Wind_Dist
+8. Pitch_Dist
+9. Roll_Dist
+10. Unity_X_SP
+11. Unity_Y_SP
+12. Unity_Alt_SP
+13. Unity_Yaw_SP
 
 # Local Model Variables (Set by "Constant" blocks):
 1. Command
@@ -373,15 +375,39 @@ function PWM = Linearization(Norm_Thrust)
 end
 ```
 ## Motor Mixers:
-- (ALT_C + PITCH_C + ROLL_C - YAW_C) is passed through a Saturation block (0, 1), to the Norm_Thrust input of the Linearization function, into a Saturation block (0, 255) and to a Goto label (PWM_RL).
-- (ALT_C + PITCH_C - ROLL_C + YAW_C) is passed through a Saturation block (0, 1), to the Norm_Thrust input of the Linearization function, into a Saturation block (0, 255) and to a Goto label (PWM_RR).
-- (ALT_C - PITCH_C + ROLL_C + YAW_C) is passed through a Saturation block (0, 1), to the Norm_Thrust input of the Linearization function, into a Saturation block (0, 255) and to a Goto label (PWM_FL).
-- (ALT_C - PITCH_C - ROLL_C - YAW_C) is passed through a Saturation block (0, 1), to the Norm_Thrust input of the Linearization function, into a Saturation block (0, 255) and to a Goto label (PWM_FR).
+- (ALT_C + PITCH_C + ROLL_C - YAW_C) is passed through a Saturation block (0, 1), to the Norm_Thrust input of the Linearization function, into a Saturation block (0, 255) and to MUX~1~.
+- (ALT_C + PITCH_C - ROLL_C + YAW_C) is passed through a Saturation block (0, 1), to the Norm_Thrust input of the Linearization function, into a Saturation block (0, 255) and to MUX~2~.
+- (ALT_C - PITCH_C + ROLL_C + YAW_C) is passed through a Saturation block (0, 1), to the Norm_Thrust input of the Linearization function, into a Saturation block (0, 255) and to MUX~3~.
+- (ALT_C - PITCH_C - ROLL_C - YAW_C) is passed through a Saturation block (0, 1), to the Norm_Thrust input of the Linearization function, into a Saturation block (0, 255) and to MUX~4~.
 
-Then a From label from every motor signal is passed through a Data Type Conversion block (Output: Single), to a Byte Pack block and to a TCP/IP Send block.
+The output of the MUX block is fed into a Battery Model Subsystem.
+The output of the Battery Model Subsystem is V_Battery, this signal is fed into a Voltage Compensation MATLAB functionn block:
+
+```matlab
+function [PWM_Comp, Low_V_Flag] = Volt_Compensation(PWM, Voltage_Level)
+    if (Voltage_Level < 10)
+        Low_V_Flag = 1;
+        PWM_Comp = PWM;
+
+    else
+        Low_V_Flag = 0;
+        PWM_Comp = round(PWM * (12 / Voltage_Level));
+    end
+end
+```
+The output of this function is a vector of 4 PWMs, passed into a Demux block.
+
+- DEMUX~1~ >> PWM_RR
+- DEMUX~2~ >> PWM_RL
+- DEMUX~3~ >> PWM_FR
+- DEMUX~4~ >> PWM_FL
+
+
+Then every motor signal is passed through a Data Type Conversion block (Output: Single), to a Byte Pack block and to a TCP/IP Send block.
 
 ## Output Variables (Simulink -> Unity):
 1. PWM_RL
 2. PWM_RR
 3. PWM_FL
 4. PWM_FR
+5. V_Battery
